@@ -4,6 +4,7 @@ from botocore.exceptions import ClientError
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
+
 # Initialize SQS client
 sqs = boto3.client('sqs')
 queue_url = 'https://sqs.us-east-1.amazonaws.com/792766465280/cs5260-requests'
