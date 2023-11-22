@@ -1,6 +1,6 @@
 import json
 import pytest
-from WidgetRequestHandler import lambda_handler
+from holder import lambda_handler
 
 # A sample correct widget request event as a JSON string
 valid_widget_event_string = json.dumps({

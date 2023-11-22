@@ -1,0 +1,64 @@
+LAMBDA CONSOLE TESTS
+-----------------------
+- Create Widget
+{
+  "body": "{\"type\": \"WidgetCreateRequest\", \"requestId\": \"req-123456\", \"widgetId\": \"widget-001\", \"owner\": \"John Doe\", \"label\": \"My First Widget\", \"description\": \"This is a description for my first widget.\", \"otherAttributes\": [{ \"name\": \"color\", \"value\": \"blue\" }, { \"name\": \"size\", \"value\": \"medium\" }]}"
+}
+- Update Widget
+{
+  "body": "{\"type\": \"WidgetUpdateRequest\", \"requestId\": \"req-update\", \"widgetId\": \"widget-update\", \"owner\": \"Bob\", \"label\": \"Updated Widget\", \"description\": \"Updated description for my widget.\", \"otherAttributes\": [{ \"name\": \"color\", \"value\": \"green\" }]}"
+}
+- Delete Widget
+{
+  "body": "{\"type\": \"WidgetDeleteRequest\", \"requestId\": \"req-delete\", \"widgetId\": \"widget-delete\", \"owner\": \"Carol\"}"
+}
+
+API GATEWAY TESTS
+---------------------
+- Create Widget
+"{\"type\": \"WidgetCreateRequest\", \"requestId\": \"req-123456\", \"widgetId\": \"widget-001\", \"owner\": \"John Doe\", \"label\": \"My First Widget\", \"description\": \"This is a description for my first widget.\", \"otherAttributes\": [{ \"name\": \"color\", \"value\": \"blue\" }, { \"name\": \"size\", \"value\": \"medium\" }]}"
+- Update Widget
+"{\"type\": \"WidgetUpdateRequest\", \"requestId\": \"req-update\", \"widgetId\": \"widget-update\", \"owner\": \"Bob\", \"label\": \"Updated Widget\", \"description\": \"Updated description for my widget.\", \"otherAttributes\": [{ \"name\": \"color\", \"value\": \"green\" }]}"
+- Delete Widget
+"{\"type\": \"WidgetDeleteRequest\", \"requestId\": \"req-delete\", \"widgetId\": \"widget-delete\", \"owner\": \"Carol\"}"
+
+HTTP TESTS
+--------------------
+- Create Widget
+curl -X POST https://4ez9ax1k68.execute-api.us-east-1.amazonaws.com/prod/widget \
+-H "Content-Type: application/json" \
+-d '{
+      "type": "WidgetCreateRequest",
+      "requestId": "req-create",
+      "widgetId": "widget-create",
+      "owner": "Alice",
+      "label": "New Widget",
+      "description": "A description for my new widget.",
+      "otherAttributes": [
+        {"name": "color", "value": "red"},
+        {"name": "size", "value": "large"}
+      ]
+    }'
+- Update Widget
+curl -X POST https://4ez9ax1k68.execute-api.us-east-1.amazonaws.com/prod/widget \
+-H "Content-Type: application/json" \
+-d '{
+      "type": "WidgetUpdateRequest",
+      "requestId": "req-update",
+      "widgetId": "widget-update",
+      "owner": "Bob",
+      "label": "Updated Widget",
+      "description": "Updated description for my widget.",
+      "otherAttributes": [
+        {"name": "color", "value": "green"}
+      ]
+    }'
+- Delete Widget
+curl -X POST https://4ez9ax1k68.execute-api.us-east-1.amazonaws.com/prod/widget \
+-H "Content-Type: application/json" \
+-d '{
+      "type": "WidgetDeleteRequest",
+      "requestId": "req-delete",
+      "widgetId": "widget-delete",
+      "owner": "Carol"
+    }'
