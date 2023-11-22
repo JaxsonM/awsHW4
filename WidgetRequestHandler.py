@@ -1,92 +1,60 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
-
+import re
 
 # Initialize SQS client
 sqs = boto3.client('sqs')
 queue_url = 'https://sqs.us-east-1.amazonaws.com/792766465280/cs5260-requests'
 
-# Define the JSON schema for validation
-widget_schema = {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "object",
-  "properties": {
-    "type": {
-      "type": "string",
-      "pattern": "WidgetCreateRequest|WidgetDeleteRequest|WidgetUpdateRequest"
-    },
-    "requestId": {
-      "type": "string"
-    },
-    "widgetId": {
-      "type": "string"
-    },
-    "owner": {
-      "type": "string",
-      "pattern": "[A-Za-z ]+"
-    },
-    "label": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string"
-    },
-    "otherAttributes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        },
-        "required": ["name", "value"]
-      }
-    }
-  },
-  "required": ["type", "requestId", "widgetId", "owner"]
-}
-
 def validate_widget_request(widget_request):
-    try:
-        validate(instance=widget_request, schema=widget_schema)
-    except ValidationError as e:
-        return False, str(e)
+    # Define the required top-level fields
+    required_fields = {"type", "requestId", "widgetId", "owner"}
+    # Define the valid types for the type field
+    valid_types = {"WidgetCreateRequest", "WidgetDeleteRequest", "WidgetUpdateRequest"}
+    # Define the pattern for the owner field
+    owner_pattern = "[A-Za-z ]+"
+
+    # Check for required fields
+    if not all(field in widget_request for field in required_fields):
+        return False, "Missing required field(s)."
+
+    # Check the 'type' field is one of the valid types
+    if widget_request['type'] not in valid_types:
+        return False, "Invalid type value."
+
+    # Check the 'owner' field matches the pattern
+    if not isinstance(widget_request['owner'], str) or not re.match(owner_pattern, widget_request['owner']):
+        return False, "Invalid owner value."
+
+    # Validate 'otherAttributes' if present
+    if 'otherAttributes' in widget_request:
+        if not isinstance(widget_request['otherAttributes'], list):
+            return False, "'otherAttributes' must be a list."
+        
+        for attribute in widget_request['otherAttributes']:
+            if not isinstance(attribute, dict):
+                return False, "Each item in 'otherAttributes' must be an object."
+            if 'name' not in attribute or 'value' not in attribute:
+                return False, "Each item in 'otherAttributes' must contain 'name' and 'value'."
+
     return True, None
 
 def lambda_handler(event, context):
-    print("entering lambda")
     try:
-        if isinstance(event['body'], str):
-            print("String")
-            try:
-                widget_request = json.loads(event['body'])
-            except json.JSONDecodeError:
-                raise ValueError("Invalid JSON format in request body")
-        elif isinstance(event['body'], dict):
-            widget_request = event['body']
-        else:
-            raise ValueError("Request body must be a JSON object or string")
-
+        # Parse the JSON body from the event
+        widget_request = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
 
         # Validate the widget request
         is_valid, validation_error = validate_widget_request(widget_request)
-        print(is_valid)
         if not is_valid:
             raise ValueError(f'Validation failed for the widget request: {validation_error}')
-        print("Sending message")
+
         # Send the valid widget request to the SQS queue
         response = sqs.send_message(
             QueueUrl=queue_url,
             MessageBody=json.dumps(widget_request)
         )
-        print("Message sent to queue")
 
         # Return a success response
         return {
@@ -122,7 +90,6 @@ def lambda_handler(event, context):
             })
         }
 
-
 if __name__ == "__main__":
     print("MAIN")
     # Simulate an empty event and context
@@ -144,4 +111,5 @@ if __name__ == "__main__":
 })
     event = json.loads(valid_widget_event_string)
     # Call the lambda handler
-    lambda_handler(event, mock_context)
+    response = lambda_handler(event, mock_context)
+    print(response)
