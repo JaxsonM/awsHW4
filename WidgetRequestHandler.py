@@ -1,29 +1,79 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
 # Initialize SQS client
 sqs = boto3.client('sqs')
 queue_url = 'https://sqs.us-east-1.amazonaws.com/792766465280/cs5260-requests'
 
+# Define the JSON schema for validation
+widget_schema = {
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "pattern": "WidgetCreateRequest|WidgetDeleteRequest|WidgetUpdateRequest"
+    },
+    "requestId": {
+      "type": "string"
+    },
+    "widgetId": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "[A-Za-z ]+"
+    },
+    "label": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "otherAttributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "value"]
+      }
+    }
+  },
+  "required": ["type", "requestId", "widgetId", "owner"]
+}
+
 def validate_widget_request(widget_request):
-    # Add validation logic based on the JSON schema provided
-    # This is a placeholder for the validation code
-    # You can use libraries like jsonschema for validation against the schema
-    return True  # Assuming validation is successful
+    try:
+        validate(instance=widget_request, schema=widget_schema)
+    except ValidationError as e:
+        return False, str(e)
+    return True, None
 
 def lambda_handler(event, context):
-# def lambda_handler():
     try:
-        # Parse the JSON body from the event
-        # widget_request = json.loads(event['body'])
-        with open('widgetRequest.json', 'r') as file:
-            widget_request = json.load(file)
-
+        # Check if event['body'] is already a dict (indicating it's a JSON object)
+        # or a str (indicating it's a JSON string) and parse if necessary
+        if isinstance(event['body'], str):
+            widget_request = json.loads(event['body'])
+        elif isinstance(event['body'], dict):
+            widget_request = event['body']
+        else:
+            raise ValueError("Request body must be a JSON object or string")
 
         # Validate the widget request
-        if not validate_widget_request(widget_request):
-            raise ValueError('Validation failed for the widget request.')
+        is_valid, validation_error = validate_widget_request(widget_request)
+        if not is_valid:
+            raise ValueError(f'Validation failed for the widget request: {validation_error}')
 
         # Send the valid widget request to the SQS queue
         response = sqs.send_message(
