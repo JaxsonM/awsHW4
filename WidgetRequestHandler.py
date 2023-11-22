@@ -62,14 +62,16 @@ def validate_widget_request(widget_request):
 
 def lambda_handler(event, context):
     try:
-        # Check if event['body'] is already a dict (indicating it's a JSON object)
-        # or a str (indicating it's a JSON string) and parse if necessary
         if isinstance(event['body'], str):
-            widget_request = json.loads(event['body'])
+            try:
+                widget_request = json.loads(event['body'])
+            except json.JSONDecodeError:
+                raise ValueError("Invalid JSON format in request body")
         elif isinstance(event['body'], dict):
             widget_request = event['body']
         else:
             raise ValueError("Request body must be a JSON object or string")
+
 
         # Validate the widget request
         is_valid, validation_error = validate_widget_request(widget_request)
