@@ -12,8 +12,8 @@ def validate_widget_request(widget_request):
     # You can use libraries like jsonschema for validation against the schema
     return True  # Assuming validation is successful
 
-# def lambda_handler(event, context):
-def lambda_handler():
+def lambda_handler(event, context):
+# def lambda_handler():
     try:
         # Parse the JSON body from the event
         # widget_request = json.loads(event['body'])
@@ -22,16 +22,14 @@ def lambda_handler():
 
 
         # Validate the widget request
-        # if not validate_widget_request(widget_request):
-        #     raise ValueError('Validation failed for the widget request.')
+        if not validate_widget_request(widget_request):
+            raise ValueError('Validation failed for the widget request.')
 
         # Send the valid widget request to the SQS queue
         response = sqs.send_message(
             QueueUrl=queue_url,
             MessageBody=json.dumps(widget_request)
         )
-        print("made it")
-        print(response)
 
         # Return a success response
         return {
@@ -70,8 +68,8 @@ def lambda_handler():
 
 if __name__ == "__main__":
     # Simulate an empty event and context
-    # mock_event = {}
-    # mock_context = {}
+    mock_event = {}
+    mock_context = {}
 
     # Call the lambda handler
-    lambda_handler()
+    lambda_handler(mock_event, mock_context)
