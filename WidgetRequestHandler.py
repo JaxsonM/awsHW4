@@ -90,6 +90,8 @@ def lambda_handler(event, context):
             })
         }
 
+
+# This is for manual testing
 if __name__ == "__main__":
     print("MAIN")
     # Simulate an empty event and context
